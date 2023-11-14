@@ -54,10 +54,10 @@ class ESPMega:
                 self.input_chnaged_cb(id, state)
             self.input_buffer[id] = state
         elif (message.topic == (f'{self.base_topic}/ac/humidity')):
-            if not message.payload.equals("ERROR"):
+            if not message.payload==("ERROR"):
                 self.humidity_buffer = float(message.payload)
         elif (message.topic == (f'{self.base_topic}/ac/room_temperature')):
-            if not message.payload.equals("ERROR"):
+            if not message.payload==("ERROR"):
                 self.room_temperature_buffer = float(message.payload)
         if (self.mqtt_callback_user!=None):
             self.mqtt_callback_user(client, data, message)
