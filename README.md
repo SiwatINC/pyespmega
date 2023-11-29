@@ -9,34 +9,34 @@ This library is compatible with:<br/>
 - ESPMega PRO 2.0 [2018] (Model c)
 - ESPMega PRO 3.3 [2023] (Model b,c)
 
-## **SLCP Client Types**
-There are two type of ESPMega class, ESPMega and ESPMega_standalone<br/>
-The only difference is that ESPMega requires you to provide and maintain an MQTT connection
-while ESPMega_standalone create and maintain the required mqtt connection for you.
-
+## **ESPMega Client Types**
+There are two type of ESPMega client, ESPMega and ESPMega_standalone<br/>
 ### ESPMega
+ESPMega class requires you to provide and maintain an MQTT connection
 This class takes in a Paho-MQTT Client as an input argument<br/>
 **Import and Initialization**
 ```
-from espmega import espmegar3 as ESPMega
+from espmegar3 import ESPMega
 plc = ESPMega("/basetopic", MQTT_CLIENT)
 ```
-
-Methods:
-        __init__(self, base_topic: str, mqtt: pahomqtt.Client, mqtt_callback = None, input_callback = None):
-            Initializes the ESPMega object.
-        digital_read(self, pin: int) -> bool:
-            Reads the digital value of a pin.
-        digital_write(self, pin: int, state: bool) -> None:
-            Writes a digital value to a pin.
-        analog_write(self, pin: int, state: bool, value: int):
-            Writes an analog value to a pin.
-        dac_write(self, pin: int, state: bool, value: int):
-            Writes a DAC value to a pin.
-        set_ac_mode(self, mode: str):
-            Sets the AC mode.
-        set_ac_temperature(self, temperature: int):
-            Sets the AC temperature.
+### ESPMega_standalone
+ESPMega_standalone create and maintain the required mqtt connection for you.
+**Import and Initialization**
+```
+from espmegar3 import ESPMega_standalone as ESPMega
+plc = ESPMega("/basetopic", "MQTT_SERVER", MQTT_PORT)
+```
+## **ESPMega Client Functions**
+1. **digital_read(pin: int)** | Reads the digital value of a pin.
+2. **digital_write(pin: int, state: bool) | Writes a digital value to a pin.
+3. **analog_write(pin: int, state: bool, value: int)** | Writes an analog value to a pin.
+4. **dac_write(pin: int, state: bool, value: int)** | Writes a DAC value to a pin.
+5. **set_ac_mode(mode: str)** | Sets the AC mode. ("off", "fan_only", "cool")
+6. **set_ac_temperature(temperature: int)** | Sets the AC temperature.
+        
+            
+        :
+            
         set_ac_fan_speed(self, fan_speed: str):
             Sets the AC fan speed.
         get_ac_mode(self):
@@ -53,7 +53,5 @@ Methods:
             Sends an infrared code.
         request_state_update(self):
             Requests an update of the device state.
-        handle_message(self, client: pahomqtt.Client, data, message: pahomqtt.MQTTMessage):
-            Handles incoming MQTT messages.
         get_input_buffer(self):
             Returns the input buffer.
