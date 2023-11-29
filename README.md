@@ -5,7 +5,7 @@ This library provides a mean of communicating with the ESPMega Programmable Logi
 This library is compatible with:<br/>
 - ESPMega R2.4 [2018] (Model e) with IoT FreedomOS v1.2+
 - ESPMega R3.0 [2020] (All Model) with IoT Core LT OS V1.4
-- ESPMega Plus R3.0 [2020] (All Model) with IoT Core LT+ OS V1.4
+- ESPMega Plus R1.0 [2020] (All Model) with IoT Core LT+ OS V1.4
 - ESPMega R4.0 [2023] (All Model) with IoT Core LT OS V2
 - ESPMega PRO R2.0 [2020] (Model c) with IoT Core OS V1
 - ESPMega PRO R3.3 [2023] (Model b,c) with IoT Core OS V2.2 (or above)
