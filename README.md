@@ -3,11 +3,11 @@ This library provides a mean of communicating with the ESPMega Programmable Logi
 
 ## **Compatibility**
 This library is compatible with:<br/>
-- ESPMega R2.4 (Model e)
-- ESPMega R3.0 (All Model)
-- ESPMega R4.0 (All Model)
-- ESPMega PRO 2.0 (Model c)
-- ESPMega PRO 3.3 (Model b,c)
+- ESPMega R2.4 [2018] (Model e)
+- ESPMega R3.0 [2020] (All Model)
+- ESPMega R4.0 [2023] (All Model)
+- ESPMega PRO 2.0 [2018] (Model c)
+- ESPMega PRO 3.3 [2023] (Model b,c)
 
 ## **SLCP Client Types**
 There are two type of ESPMega class, ESPMega and ESPMega_standalone<br/>
