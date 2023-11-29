@@ -2,6 +2,56 @@ import paho.mqtt.client as pahomqtt
 from time import sleep
 
 class ESPMega:
+    """
+    Represents an ESPMega device.
+
+    Attributes:
+        mqtt (pahomqtt.Client): The MQTT client used for communication.
+        input_chnaged_cb (function): Callback function for input changes.
+        input_buffer (list): Buffer for storing input values.
+        humidity_buffer (float): Buffer for storing humidity value.
+        room_temperature_buffer (float): Buffer for storing room temperature value.
+        ac_mode_buffer (str): Buffer for storing AC mode value.
+        ac_temperature_buffer (int): Buffer for storing AC temperature value.
+        ac_fan_speed_buffer (str): Buffer for storing AC fan speed value.
+        base_topic (str): The base topic for MQTT communication.
+
+    Methods:
+        __init__(self, base_topic: str, mqtt: pahomqtt.Client, mqtt_callback = None, input_callback = None):
+            Initializes the ESPMega object.
+        digital_read(self, pin: int) -> bool:
+            Reads the digital value of a pin.
+        digital_write(self, pin: int, state: bool) -> None:
+            Writes a digital value to a pin.
+        analog_write(self, pin: int, state: bool, value: int):
+            Writes an analog value to a pin.
+        dac_write(self, pin: int, state: bool, value: int):
+            Writes a DAC value to a pin.
+        set_ac_mode(self, mode: str):
+            Sets the AC mode.
+        set_ac_temperature(self, temperature: int):
+            Sets the AC temperature.
+        set_ac_fan_speed(self, fan_speed: str):
+            Sets the AC fan speed.
+        get_ac_mode(self):
+            Returns the current AC mode.
+        get_ac_temperature(self):
+            Returns the current AC temperature.
+        get_ac_fan_speed(self):
+            Returns the current AC fan speed.
+        read_room_temperature(self):
+            Reads the room temperature.
+        read_humidity(self):
+            Reads the humidity.
+        send_infrared(self, code: dict):
+            Sends an infrared code.
+        request_state_update(self):
+            Requests an update of the device state.
+        handle_message(self, client: pahomqtt.Client, data, message: pahomqtt.MQTTMessage):
+            Handles incoming MQTT messages.
+        get_input_buffer(self):
+            Returns the input buffer.
+    """
     mqtt: pahomqtt.Client
     input_chnaged_cb = None
     input_buffer = [0]*16
@@ -10,6 +60,7 @@ class ESPMega:
     ac_mode_buffer: str = None
     ac_temperature_buffer: int = None
     ac_fan_speed_buffer: str = None
+
     def __init__(self, base_topic: str, mqtt: pahomqtt.Client, mqtt_callback = None, input_callback = None):
         self.mqtt = mqtt
         self.base_topic = base_topic
@@ -23,37 +74,52 @@ class ESPMega:
         self.mqtt.on_message = self.handle_message
         self.request_state_update()
         sleep(1)
+
     def digital_read(self, pin: int) -> bool:
         return self.input_buffer[pin]
+
     def digital_write(self, pin: int, state: bool) -> None:
         self.mqtt.publish(f'{self.base_topic}/pwm/{"%02d"}/set/state'%pin,"on" if state else "off")
         self.mqtt.publish(f'{self.base_topic}/pwm/{"%02d"}/set/value'%pin, 4095 if state else 0)
+
     def analog_write(self, pin: int, state: bool, value: int):
         self.mqtt.publish(f'{self.base_topic}/pwm/{"%02d"}/set/state'%pin,"on" if state else "off")
         self.mqtt.publish(f'{self.base_topic}/pwm/{"%02d"}/set/value'%pin, int(value))
+
     def dac_write(self, pin: int, state: bool, value: int):
         self.mqtt.publish(f'{self.base_topic}/dac/{"%02d"}/set/state'%pin,"on" if state else "off")
         self.mqtt.publish(f'{self.base_topic}/dac/{"%02d"}/set/value'%pin, int(value))
+
     def set_ac_mode(self, mode: str):
         self.mqtt.publish(f'{self.base_topic}/ac/set/mode', mode)
+
     def set_ac_temperature(self, temperature: int):
         self.mqtt.publish(f'{self.base_topic}/ac/set/temperature', str(temperature))
+
     def set_ac_fan_speed(self, fan_speed: str):
         self.mqtt.publish(f'{self.base_topic}/ac/set/fan_speed', fan_speed)
+
     def get_ac_mode(self):
         return self.ac_mode_buffer
+
     def get_ac_temperature(self):
         return self.ac_temperature_buffer
+
     def get_ac_fan_speed(self):
         return self.ac_fan_speed_buffer
+
     def read_room_temperature(self):
         return self.room_temperature_buffer
+
     def read_humidity(self):
         return self.humidity_buffer
+
     def send_infrared(self, code: dict):
         self.mqtt.publish(f'{self.base_topic}/ir/send', str(code))
+
     def request_state_update(self):
         self.mqtt.publish(f'{self.base_topic}/requeststate',"req")
+
     def handle_message(self, client: pahomqtt.Client, data, message: pahomqtt.MQTTMessage):
         if (message.topic.startswith(self.base_topic+"/input/")):
             id = int(message.topic[len(self.base_topic)+7:len(message.topic)])
@@ -75,6 +141,7 @@ class ESPMega:
             self.ac_fan_speed_buffer = message.payload.decode("utf-8")
         if (self.mqtt_callback_user!=None):
             self.mqtt_callback_user(client, data, message)
+
     def get_input_buffer(self):
         return self.input_buffer
 class ESPMega_standalone(ESPMega):
