@@ -1,7 +1,7 @@
 # pyESPMega
 This library provides a mean of communicating with the ESPMega Programmable Logic Controller through MQTT
 
-There are two type of ESPMega class, ESPMega and ESPMega_standalone
+There are two type of ESPMega class, ESPMega and ESPMega_standalone<br/>
 The only difference is that ESPMega requires you to provide and maintain an MQTT connection
 while ESPMega_standalone create and maintain the required mqtt connection for you.
 
