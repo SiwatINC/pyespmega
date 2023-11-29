@@ -3,11 +3,11 @@ This library provides a mean of communicating with the ESPMega Programmable Logi
 
 ## **Compatibility**
 This library is compatible with:<br/>
-- ESPMega R2.4 [2018] (Model e)
-- ESPMega R3.0 [2020] (All Model)
-- ESPMega R4.0 [2023] (All Model)
-- ESPMega PRO 2.0 [2018] (Model c)
-- ESPMega PRO 3.3 [2023] (Model b,c)
+- ESPMega R2.4 [2018] (Model e) with IoT FreedomOS v1.2+
+- ESPMega R3.0 [2020] (All Model) with IoT Core LT Firmware V1.4
+- ESPMega R4.0 [2023] (All Model) with IoT Core LT Firmware V2
+- ESPMega PRO 2.0 [2020] (Model c) with IoT Core Plus Firmware V1
+- ESPMega PRO 3.3 [2023] (Model b,c) with IoT Core Plus Firmware V2.2 (or above)
 
 ## **ESPMega Client Types**
 There are two type of ESPMega client, ESPMega and ESPMega_standalone<br/>
