@@ -29,7 +29,7 @@ plc = ESPMega("/basetopic", "MQTT_SERVER", MQTT_PORT)
 ```
 ## **ESPMega Client Functions**
 1. **digital_read(pin: int)** | Reads the digital value of a pin.
-2. **digital_write(pin: int, state: bool) | Writes a digital value to a pin.
+2. **digital_write(pin: int, state: bool)** | Writes a digital value to a pin.
 3. **analog_write(pin: int, state: bool, value: int)** | Writes an analog value to a pin.
 4. **dac_write(pin: int, state: bool, value: int)** | Writes a DAC value to a pin.
 5. **set_ac_mode(mode: str)** | Sets the AC mode. ("off", "fan_only", "cool")
