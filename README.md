@@ -17,14 +17,14 @@ ESPMega class requires you to provide and maintain an MQTT connection
 This class takes in a Paho-MQTT Client as an input argument<br/>
 **Import and Initialization**
 ```
-from espmegar3 import ESPMega
+from espmega.espmega_r3 import ESPMega
 plc = ESPMega("/basetopic", MQTT_CLIENT)
 ```
 ### ESPMega_standalone
 ESPMega_standalone create and maintain the required mqtt connection for you.
 **Import and Initialization**
 ```
-from espmegar3 import ESPMega_standalone as ESPMega
+from espmega.espmega_r3 import ESPMega_standalone as ESPMega
 plc = ESPMega("/basetopic", "MQTT_SERVER", MQTT_PORT)
 ```
 ## **ESPMega Client Functions**
