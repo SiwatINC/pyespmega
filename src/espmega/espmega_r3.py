@@ -6,6 +6,8 @@ class ESPMega:
     mqtt: pahomqtt.Client
     input_chnaged_cb = None
     input_buffer = [0]*16
+    pwm_state_buffer = [0]*16
+    pwm_value_buffer = [0]*16
     adc_buffer = [0]*8
     humidity_buffer: float = None
     room_temperature_buffer: float = None
@@ -23,6 +25,8 @@ class ESPMega:
         self.mqtt.subscribe(f'{base_topic}/ac/temperature')
         self.mqtt.subscribe(f'{base_topic}/ac/fan_speed')
         self.mqtt.subscribe(f'{base_topic}/adc/#')
+        self.mqtt.subscribe(f'{base_topic}/pwm/#')
+        self.mqtt.subscribe(f'{base_topic}/ac/#')
         self.mqtt_callback_user = mqtt_callback
         self.mqtt.on_message = self.handle_message
         self.request_state_update()
@@ -235,13 +239,13 @@ class ESPMega:
             self.input_buffer[id] = state
         elif (message.topic.startswith(self.base_topic+"/adc/") and message.topic.endswith("/report")):
             id = int(
-                message.topic[len(self.base_topic)+5:len(message.topic)-7])
+                message.topic[len(self.base_topic)+5:len(message.topic)+6])
             self.adc_buffer[id] = int(message.payload)
         elif (message.topic == (f'{self.base_topic}/ac/humidity')):
-            if not message.payload == (b'ERROR'):
+            if message.payload != (b'ERROR'):
                 self.humidity_buffer = float(message.payload)
         elif (message.topic == (f'{self.base_topic}/ac/room_temperature')):
-            if not message.payload == (b'ERROR'):
+            if message.payload != (b'ERROR'):
                 self.room_temperature_buffer = float(message.payload)
         elif (message.topic == (f'{self.base_topic}/ac/mode')):
             self.ac_mode_buffer = message.payload.decode("utf-8")
@@ -249,6 +253,13 @@ class ESPMega:
             self.ac_temperature_buffer = int(message.payload)
         elif (message.topic == (f'{self.base_topic}/ac/fan_speed')):
             self.ac_fan_speed_buffer = message.payload.decode("utf-8")
+        elif (message.topic.startswith(f'{self.base_topic}/pwm/') and message.topic.endswith("/state") and len(message.topic) == len(self.base_topic)+11):
+            pwm_id = message.topic[len(self.base_topic)+5:len(message.topic)+6]
+            self.pwm_state_buffer[pwm_id] = int(message.payload.decode("utf-8"))
+        elif (message.topic.startswith(f'{self.base_topic}/pwm/') and message.topic.endswith("/value") and len(message.topic) == len(self.base_topic)+11):
+            pwm_id = message.topic[len(self.base_topic)+5:len(message.topic)+6]
+            self.pwm_value_buffer[pwm_id] = int(message.payload.decode("utf-8"))
+        
         if (self.mqtt_callback_user != None):
             self.mqtt_callback_user(client, data, message)
 
@@ -257,6 +268,30 @@ class ESPMega:
           Return all states of the input pins as a list.
         """
         return self.input_buffer
+
+    def get_pwm_state(self, pin: int):
+        """
+          Return the state of the specified PWM pin.
+        """
+        return self.pwm_state_buffer[pin]
+    
+    def get_pwm_value(self, pin: int):
+        """
+          Return the value of the specified PWM pin.
+        """
+        return self.pwm_value_buffer[pin]
+    
+    def get_pwm_state_buffer(self):
+        """
+          Return all states of the PWM pins as a list.
+        """
+        return self.pwm_state_buffer
+    
+    def get_pwm_value_buffer(self):
+        """
+          Return all values of the PWM pins as a list.
+        """
+        return self.pwm_value_buffer
 
 
 class ESPMega_standalone(ESPMega):
