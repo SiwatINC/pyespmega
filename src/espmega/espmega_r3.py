@@ -5,8 +5,8 @@ from time import sleep
 class ESPMega:
     mqtt: pahomqtt.Client
     input_chnaged_cb = None
-    input_buffer = [0]*16
-    pwm_state_buffer = [0]*16
+    input_buffer = [False]*16
+    pwm_state_buffer = [False]*16
     pwm_value_buffer = [0]*16
     adc_buffer = [0]*8
     humidity_buffer: float = None
@@ -14,6 +14,7 @@ class ESPMega:
     ac_mode_buffer: str = None
     ac_temperature_buffer: int = None
     ac_fan_speed_buffer: str = None
+    avaliable: bool = False
 
     def __init__(self, base_topic: str, mqtt: pahomqtt.Client, mqtt_callback=None, input_callback=None):
         self.mqtt = mqtt
@@ -27,10 +28,13 @@ class ESPMega:
         self.mqtt.subscribe(f'{base_topic}/adc/#')
         self.mqtt.subscribe(f'{base_topic}/pwm/#')
         self.mqtt.subscribe(f'{base_topic}/ac/#')
+        self.mqtt.subscribe(f'{base_topic}/availability')
         self.mqtt_callback_user = mqtt_callback
         self.mqtt.on_message = self.handle_message
         self.request_state_update()
         sleep(1)
+        if (not self.avaliable):
+            raise Exception("ESPMega is not avaliable, please check the connection.")
 
     def digital_read(self, pin: int) -> bool:
         """
@@ -42,6 +46,7 @@ class ESPMega:
         Returns:
             bool: The digital value read from the pin.
         """
+        self.__check_availability()
         return self.input_buffer[pin]
 
     def digital_write(self, pin: int, state: bool) -> None:
@@ -52,6 +57,7 @@ class ESPMega:
             pin (int): The pin number.
             state (bool): The desired state of the pin. True for HIGH, False for LOW.
         """
+        self.__check_availability()
         self.mqtt.publish(
             f'{self.base_topic}/pwm/{"%02d"}/set/state' % pin, "on" if state else "off")
         self.mqtt.publish(
@@ -69,6 +75,7 @@ class ESPMega:
         Returns:
             None
         """
+        self.__check_availability()
         self.mqtt.publish(
             f'{self.base_topic}/pwm/{"%02d"}/set/state' % pin, "on" if state else "off")
         self.mqtt.publish(
@@ -87,6 +94,7 @@ class ESPMega:
         Note:
             The value will only update if the ADC is enabled.
         """
+        self.__check_availability()
         return self.adc_buffer[pin]
 
     def dac_write(self, pin: int, state: bool, value: int):
@@ -101,6 +109,7 @@ class ESPMega:
         Returns:
             None
         """
+        self.__check_availability()
         self.mqtt.publish(
             f'{self.base_topic}/dac/{"%02d"}/set/state' % pin, "on" if state else "off")
         self.mqtt.publish(
@@ -116,6 +125,7 @@ class ESPMega:
         Returns:
             None
         """
+        self.__check_availability()
         print(f'{self.base_topic}/adc/{"%02d"}/set/state' % pin)
         self.mqtt.publish(
             f'{self.base_topic}/adc/{"%02d"}/set/state' % pin, "on")
@@ -130,6 +140,7 @@ class ESPMega:
         Returns:
             None
         """
+        self.__check_availability()
         self.mqtt.publish(
             f'{self.base_topic}/adc/{"%02d"}/set/state' % pin, "off")
 
@@ -143,6 +154,7 @@ class ESPMega:
         Returns:
             None
         """
+        self.__check_availability()
         self.mqtt.publish(f'{self.base_topic}/ac/set/mode', mode)
 
     def set_ac_temperature(self, temperature: int):
@@ -155,6 +167,7 @@ class ESPMega:
         Returns:
             None
         """
+        self.__check_availability()
         self.mqtt.publish(
             f'{self.base_topic}/ac/set/temperature', str(temperature))
 
@@ -168,6 +181,7 @@ class ESPMega:
         Returns:
             None
         """
+        self.__check_availability()
         self.mqtt.publish(f'{self.base_topic}/ac/set/fan_speed', fan_speed)
 
     def get_ac_mode(self):
@@ -177,12 +191,14 @@ class ESPMega:
         Returns:
             str: The current AC mode.
         """
+        self.__check_availability()
         return self.ac_mode_buffer
 
     def get_ac_temperature(self):
         """
         Returns the current temperature of the air conditioning system.
         """
+        self.__check_availability()
         return self.ac_temperature_buffer
 
     def get_ac_fan_speed(self):
@@ -192,6 +208,7 @@ class ESPMega:
         Returns:
             int: The fan speed value.
         """
+        self.__check_availability()
         return self.ac_fan_speed_buffer
 
     def read_room_temperature(self):
@@ -201,6 +218,7 @@ class ESPMega:
         Returns:
             float: The room temperature.
         """
+        self.__check_availability()
         return self.room_temperature_buffer
 
     def read_humidity(self):
@@ -210,19 +228,22 @@ class ESPMega:
         Returns:
             The humidity value from the humidity buffer.
         """
+        self.__check_availability()
         return self.humidity_buffer
 
-    def send_infrared(self, code: dict):
+    def send_infrared(self, code: list):
         """
         Sends an infrared code.
 
         Args:
-            code (dict): The infrared code to send.
+            code (list): The infrared code to send.
 
         Returns:
             None
         """
-        self.mqtt.publish(f'{self.base_topic}/ir/send', str(code))
+        self.__check_availability()
+        payload = ','.join(str(num) for num in code)
+        self.mqtt.publish(f'{self.base_topic}/ir/send', payload)
 
     def request_state_update(self):
         """
@@ -233,7 +254,7 @@ class ESPMega:
     def handle_message(self, client: pahomqtt.Client, data, message: pahomqtt.MQTTMessage):
         if (message.topic.startswith(self.base_topic+"/input/")):
             id = int(message.topic[len(self.base_topic)+7:len(message.topic)])
-            state = int(message.payload)
+            state = bool(int(message.payload))
             if self.input_chnaged_cb != None:
                 self.input_chnaged_cb(id, state)
             self.input_buffer[id] = state
@@ -253,13 +274,20 @@ class ESPMega:
             self.ac_temperature_buffer = int(message.payload)
         elif (message.topic == (f'{self.base_topic}/ac/fan_speed')):
             self.ac_fan_speed_buffer = message.payload.decode("utf-8")
-        elif (message.topic.startswith(f'{self.base_topic}/pwm/') and message.topic.endswith("/state") and len(message.topic) == len(self.base_topic)+11):
-            pwm_id = message.topic[len(self.base_topic)+5:len(message.topic)+6]
-            self.pwm_state_buffer[pwm_id] = int(message.payload.decode("utf-8"))
-        elif (message.topic.startswith(f'{self.base_topic}/pwm/') and message.topic.endswith("/value") and len(message.topic) == len(self.base_topic)+11):
-            pwm_id = message.topic[len(self.base_topic)+5:len(message.topic)+6]
+        elif (message.topic.startswith(f'{self.base_topic}/pwm/') and message.topic.endswith("/state") and len(message.topic) == len(self.base_topic)+13):
+            pwm_id = int(message.topic[len(self.base_topic)+5:len(self.base_topic)+7])
+            if (message.payload == b'on'):
+                self.pwm_state_buffer[pwm_id] = True
+            elif (message.payload == b'off'):
+                self.pwm_state_buffer[pwm_id] = False
+        elif (message.topic.startswith(f'{self.base_topic}/pwm/') and message.topic.endswith("/value") and len(message.topic) == len(self.base_topic)+13):
+            pwm_id = int(message.topic[len(self.base_topic)+5:len(self.base_topic)+7])
             self.pwm_value_buffer[pwm_id] = int(message.payload.decode("utf-8"))
-        
+        elif (message.topic == (f'{self.base_topic}/availability')): 
+            if (message.payload == b'online'):
+                self.avaliable = True
+            elif (message.payload == b'offline'):
+                self.avaliable = False
         if (self.mqtt_callback_user != None):
             self.mqtt_callback_user(client, data, message)
 
@@ -267,33 +295,46 @@ class ESPMega:
         """
           Return all states of the input pins as a list.
         """
+        self.__check_availability()
         return self.input_buffer
 
     def get_pwm_state(self, pin: int):
         """
           Return the state of the specified PWM pin.
         """
+        self.__check_availability()
         return self.pwm_state_buffer[pin]
     
     def get_pwm_value(self, pin: int):
         """
           Return the value of the specified PWM pin.
         """
+        self.__check_availability()
         return self.pwm_value_buffer[pin]
     
     def get_pwm_state_buffer(self):
         """
           Return all states of the PWM pins as a list.
         """
+        self.__check_availability()
         return self.pwm_state_buffer
     
     def get_pwm_value_buffer(self):
         """
           Return all values of the PWM pins as a list.
         """
+        self.__check_availability()
         return self.pwm_value_buffer
 
-
+    def is_available(self):
+        """
+          Return the availability of the ESPMega.
+        """
+        return self.avaliable
+    
+    def __check_availability(self):
+        if (not self.avaliable):
+            raise Exception("ESPMega is not avaliable, please check the connection.")
 class ESPMega_standalone(ESPMega):
     def __init__(self, base_topic: str, mqtt_server: str, mqtt_port: int, mqtt_use_auth: bool = False,
                  mqtt_username: str = None, mqtt_password: str = None, mqtt_callback=None,
