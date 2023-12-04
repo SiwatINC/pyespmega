@@ -346,3 +346,8 @@ class ESPMega_standalone(ESPMega):
         self.mqtt.loop_start()
         super().__init__(base_topic=base_topic, mqtt=self.mqtt,
                          mqtt_callback=mqtt_callback, input_callback=input_callback)
+
+class ESPMega_standalone_slave(ESPMega_standalone):
+    def __init__(self, base_topic: str, master: ESPMega_standalone):
+        self.mqtt = master.mqtt
+        super().super().__init__(base_topic=base_topic, mqtt=self.mqtt)
