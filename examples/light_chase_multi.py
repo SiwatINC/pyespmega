@@ -2,6 +2,8 @@ from espmega.espmega_r3 import ESPMega
 from paho.mqtt import client
 import time
 
+# This is an example of how to use the ESPMega class to control multiple ESPMega devices
+
 mqtt = client.Client("python_emgclient")
 mqtt.connect("192.168.0.26", 1883)
 mqtt.loop_start()
