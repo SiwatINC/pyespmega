@@ -6,7 +6,7 @@ def readme():
 
 setup(
     name='espmega',
-    version='1.9',
+    version='1.10',
     license='Apache 2.0',
     author="Siwat Sirichai",
     author_email='siwat@siwatinc.com',
