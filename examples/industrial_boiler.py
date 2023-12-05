@@ -46,9 +46,6 @@ boil_time = 100
 fill_time = 5
 drain_time = 10
 
-def adc_to_temp(adc_value):
-    
-
 # Boiler plant implementation
 def boiler_plant():
     # Open the inlet valve
