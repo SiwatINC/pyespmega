@@ -4,6 +4,7 @@ from time import sleep
 
 class ESPMega:
     mqtt: pahomqtt.Client
+    original_callback_func = None
     input_chnaged_cb = None
     input_buffer = [False]*16
     pwm_state_buffer = [False]*16
@@ -16,7 +17,7 @@ class ESPMega:
     ac_fan_speed_buffer: str = None
     avaliable: bool = False
 
-    def __init__(self, base_topic: str, mqtt: pahomqtt.Client, mqtt_callback=None, input_callback=None):
+    def __init__(self, base_topic: str, mqtt: pahomqtt.Client, input_callback=None):
         self.mqtt = mqtt
         self.base_topic = base_topic
         self.mqtt.subscribe(f'{base_topic}/input/#')
@@ -29,7 +30,7 @@ class ESPMega:
         self.mqtt.subscribe(f'{base_topic}/pwm/#')
         self.mqtt.subscribe(f'{base_topic}/ac/#')
         self.mqtt.subscribe(f'{base_topic}/availability')
-        self.mqtt_callback_user = mqtt_callback
+        self.original_callback_func = self.mqtt.on_message
         self.mqtt.on_message = self.handle_message
         self.request_state_update()
         sleep(1)
@@ -296,8 +297,8 @@ class ESPMega:
                 self.avaliable = True
             elif (message.payload == b'offline'):
                 self.avaliable = False
-        if (self.mqtt_callback_user != None):
-            self.mqtt_callback_user(client, data, message)
+        if (self.original_callback_func!= None):
+            self.original_callback_func(client, data, message)
 
     def get_input_buffer(self):
         """
@@ -348,18 +349,16 @@ class ESPMega:
 
 class ESPMega_standalone(ESPMega):
     def __init__(self, base_topic: str, mqtt_server: str, mqtt_port: int, mqtt_use_auth: bool = False,
-                 mqtt_username: str = None, mqtt_password: str = None, mqtt_callback=None,
+                 mqtt_username: str = None, mqtt_password: str = None,
                  input_callback=None):
         self.mqtt = pahomqtt.Client()
         if (mqtt_use_auth):
             self.mqtt.username_pw_set(mqtt_username, mqtt_password)
         self.mqtt.connect(host=mqtt_server, port=mqtt_port, keepalive=60)
         self.mqtt.loop_start()
-        super().__init__(base_topic=base_topic, mqtt=self.mqtt,
-                         mqtt_callback=mqtt_callback, input_callback=input_callback)
+        super().__init__(base_topic=base_topic, mqtt=self.mqtt, input_callback=input_callback)
 
 
-class ESPMega_standalone_slave(ESPMega_standalone):
-    def __init__(self, base_topic: str, master: ESPMega_standalone):
-        self.mqtt = master.mqtt
-        super().super().__init__(base_topic=base_topic, mqtt=self.mqtt)
+class ESPMega_slave(ESPMega):
+    def __init__(self, base_topic: str, master: ESPMega_standalone, input_callback=None):
+        super().__init__(base_topic, master.mqtt, input_callback=input_callback)
