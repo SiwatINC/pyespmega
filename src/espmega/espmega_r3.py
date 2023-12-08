@@ -16,6 +16,7 @@ class ESPMega:
     ac_temperature_buffer: int = None
     ac_fan_speed_buffer: str = None
     avaliable: bool = False
+    rapid_response_mode: bool = False
 
     def __init__(self, base_topic: str, mqtt: pahomqtt.Client, input_callback=None):
         self.mqtt = mqtt
@@ -37,6 +38,29 @@ class ESPMega:
         if (not self.avaliable):
             raise Exception(
                 "ESPMega is not avaliable, please check the connection.")
+
+    def enable_rapid_response_mode(self):
+        """
+        Enables rapid response mode.
+
+        Returns:
+            None
+        """
+        self.__check_availability()
+        self.mqtt.publish(f'{self.base_topic}/pwm/report_enable', "on")
+        self.rapid_response_mode = True
+
+    def disable_rapid_response_mode(self):
+        """
+        Disables rapid response mode.
+
+        Returns:
+            None
+        """
+        self.__check_availability()
+        self.mqtt.publish(f'{self.base_topic}/pwm/report_enable', "off")
+        self.request_state_update()
+        self.rapid_response_mode = False
 
     def digital_read(self, pin: int) -> bool:
         """
@@ -63,9 +87,18 @@ class ESPMega:
         if (state != self.pwm_state_buffer[pin]):
             self.mqtt.publish(
                 f'{self.base_topic}/pwm/{"%02d"}/set/state' % pin, "on" if state else "off")
-        if (self.pwm_value_buffer[pin] != (4095 if state else 0)):
-            self.mqtt.publish(
-                f'{self.base_topic}/pwm/{"%02d"}/set/value' % pin, 4095 if state else 0)
+            if(self.rapid_response_mode):
+                self.pwm_state_buffer[pin] = state
+        if (self.rapid_response_mode):
+            # In rapid response mode, set the value to 4095 for all case
+            if (self.pwm_value_buffer[pin] != 4095):
+                self.mqtt.publish(
+                    f'{self.base_topic}/pwm/{"%02d"}/set/value' % pin, 4095)
+                self.pwm_value_buffer[pin] = 4095
+        else:
+            if (self.pwm_value_buffer[pin] != (4095 if state else 0)):
+                self.mqtt.publish(
+                    f'{self.base_topic}/pwm/{"%02d"}/set/value' % pin, 4095 if state else 0)
 
     def analog_write(self, pin: int, state: bool, value: int):
         """
@@ -83,9 +116,13 @@ class ESPMega:
         if (state != self.pwm_state_buffer[pin]):
             self.mqtt.publish(
                 f'{self.base_topic}/pwm/{"%02d"}/set/state' % pin, "on" if state else "off")
+            if(self.rapid_response_mode):
+                self.pwm_state_buffer[pin] = state
         if (value != self.pwm_value_buffer[pin]):
             self.mqtt.publish(
                 f'{self.base_topic}/pwm/{"%02d"}/set/value' % pin, int(value))
+            if(self.rapid_response_mode):
+                self.pwm_value_buffer[pin] = value
 
     def adc_read(self, pin: int) -> int:
         """
