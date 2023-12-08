@@ -47,7 +47,7 @@ class ESPMega:
             None
         """
         self.__check_availability()
-        self.mqtt.publish(f'{self.base_topic}/pwm/report_enable', "on")
+        self.mqtt.publish(f'{self.base_topic}/pwm/report_enable', "off")
         self.rapid_response_mode = True
 
     def disable_rapid_response_mode(self):
@@ -58,7 +58,7 @@ class ESPMega:
             None
         """
         self.__check_availability()
-        self.mqtt.publish(f'{self.base_topic}/pwm/report_enable', "off")
+        self.mqtt.publish(f'{self.base_topic}/pwm/report_enable', "on")
         self.request_state_update()
         self.rapid_response_mode = False
 
