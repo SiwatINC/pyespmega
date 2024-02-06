@@ -10,7 +10,7 @@ class ESPMegaOS:
     mqtt_use_auth: bool
     mqtt_username: str
     mqtt_password: str
-    def __init__(self, mqtt_server: str, mqtt_port: int, mqtt_use_auth: bool = False,):
+    def __init__(self, mqtt_server: str, mqtt_port: int, mqtt_use_auth: bool = False,mqtt_username: str = None, mqtt_password: str = None):
         self.mcm = ESPMegaMultiServerConnectionManager()
         self.mqtt_server = mqtt_server
         self.mqtt_port = mqtt_port
