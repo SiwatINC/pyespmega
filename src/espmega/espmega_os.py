@@ -10,6 +10,7 @@ class ESPMegaOS:
     mqtt_use_auth: bool
     mqtt_username: str
     mqtt_password: str
+    cards: dict = {}
     def __init__(self, mqtt_server: str, mqtt_port: int, mqtt_use_auth: bool = False,mqtt_username: str = None, mqtt_password: str = None):
         self.mcm = ESPMegaMultiServerConnectionManager()
         self.mqtt_server = mqtt_server
@@ -21,3 +22,7 @@ class ESPMegaOS:
             self.mcm.get_server(self.mqtt_server, self.mqtt_port)
         else:
             self.mcm.get_server(self.mqtt_server, self.mqtt_port, self.mqtt_use_auth, self.mqtt_username, self.mqtt_password)
+    def _subscribe(self, topic: str, callback: callable):
+        self.mcm.subscribe(self.server, topic, callback)
+    def _publish(self, topic: str, payload: str):
+        self.mcm.publish(self.server, topic, payload)
