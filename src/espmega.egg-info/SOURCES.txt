@@ -1,6 +1,9 @@
 README.md
 setup.py
 src/espmega/__init__.py
+src/espmega/cards.py
+src/espmega/connection.py
+src/espmega/espmega_os.py
 src/espmega/espmega_r3.py
 src/espmega.egg-info/PKG-INFO
 src/espmega.egg-info/SOURCES.txt
