@@ -11,6 +11,9 @@ class Card(ABC):
     @abstractmethod
     def subscribe_card(self):
         pass
+    @abstractmethod
+    def request_update(self):
+        pass
 
 class DigitalInputCard(Card):
     pass
