@@ -1,5 +1,6 @@
 from espmega.connection import ESPMegaMultiServerConnectionManager
 from time import sleep
+from cards import Card, DigitalInputCard, DigitalOutputCard
 
 
 class ESPMegaOS:
@@ -26,3 +27,11 @@ class ESPMegaOS:
         self.mcm.subscribe(self.server, topic, callback)
     def _publish(self, topic: str, payload: str):
         self.mcm.publish(self.server, topic, payload)
+    def register_card(self, card: Card):
+        self.cards[card.card_id] = card
+    def subscribe_cards(self):
+        for card in self.cards:
+            self.cards[card].subscribe_card()
+    def request_updates(self):
+        for card in self.cards:
+            self.cards[card].request_update()

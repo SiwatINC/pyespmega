@@ -89,3 +89,23 @@ class ESPMegaMultiServerConnectionManager:
         return self.connection_managers[server_name].subscribe(topic, callback_wrapper)
     def unsubscribe(self, server_name: str, callback_id: int):
         self.connection_managers[server_name].unsubscribe(callback_id)
+
+# This class provides a way for a card object representation to interact with the MQTT broker
+# The adapater object is created by the ESPMegaOS object and passed to the card object
+class CardMQTTAdapter:
+    card_id: int
+    base_topic: str
+    conn: ESPMegaConnectionManager
+    server: str
+    def __init__(self, card_id: int, base_topic: str, conn: ESPMegaConnectionManager):
+        self.card_id = card_id
+        self.base_topic = base_topic
+        self.conn = conn
+    def subscribe_relative(self, topic: str, callback: callable):
+        self.conn.subscribe(f'{self.base_topic}/{self.card_id}/{topic}', callback)
+    def publish_relative(self, topic: str, payload: str):
+        self.conn.publish(f'{self.base_topic}/{self.card_id}/{topic}', payload)
+    def subscribe_absolute(self, topic: str, callback: callable):
+        self.conn.subscribe(topic, callback)
+    def publish_absolute(self, topic: str, payload: str):
+        self.conn.publish(topic, payload)
